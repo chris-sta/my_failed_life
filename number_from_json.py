@@ -55,3 +55,6 @@ for index, path in enumerate(paths, start=1):
         f.write(content)
 
 print("Numbering complete ✅")
+
+# cd C:\Users\Chris\Documents\Repos\my_failed_art
+# py number_from_json.py
