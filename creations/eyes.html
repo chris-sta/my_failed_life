@@ -42,25 +42,11 @@ html, body {
 <div class="eye" style="left:calc(50% - 150px); top:50%;"><div class="pupil"></div></div>
 <div class="eye" style="left:calc(50% + 50px); top:50%;"><div class="pupil"></div></div>
 <script>
-const eyes = Array.from(document.querySelectorAll('.eye'));
-const positions = [
-  {x: 100, y: 100},{x: 400, y: 150},{x: 700, y: 100},{x: 120, y: 400},{x: 650, y: 300},
-  {x: 300, y: 500},{x: 500, y: 600},{x: 800, y: 450},{x: 200, y: 700},{x: 600, y: 750},{x: 900, y: 650}
-];
-setTimeout(() => {
-  positions.forEach(pos => {
-    const eye = document.createElement('div');
-    eye.className = 'eye';
-    eye.style.left = pos.x + 'px';
-    eye.style.top = pos.y + 'px';
-    const pupil = document.createElement('div');
-    pupil.className = 'pupil';
-    eye.appendChild(pupil);
-    document.body.appendChild(eye);
-    eyes.push(eye);
-  });
-},20000);
+let eyes = Array.from(document.querySelectorAll('.eye'));
+let followCursor = true;
+
 document.addEventListener('mousemove', e => {
+  if (!followCursor) return;
   eyes.forEach(eye => {
     const pupil = eye.querySelector('.pupil');
     const rect = eye.getBoundingClientRect();
@@ -74,7 +60,35 @@ document.addEventListener('mousemove', e => {
     pupil.style.top = 35 + r*Math.sin(angle) + 'px';
   });
 });
+
+setTimeout(() => {
+  const positions = [
+    {x: 100, y: 100},{x: 400, y: 150},{x: 700, y: 100},{x: 120, y: 400},{x: 650, y: 300},
+    {x: 300, y: 500},{x: 500, y: 600},{x: 800, y: 450},{x: 200, y: 700},{x: 600, y: 750},{x: 900, y: 650}
+  ];
+  
+  positions.forEach(pos => {
+    const eye = document.createElement('div');
+    eye.className = 'eye';
+    eye.style.left = pos.x + 'px';
+    eye.style.top = pos.y + 'px';
+    const pupil = document.createElement('div');
+    pupil.className = 'pupil';
+    eye.appendChild(pupil);
+    document.body.appendChild(eye);
+    eyes.push(eye);
+  });
+  setTimeout(() => {
+    followCursor = false;
+    eyes.forEach(eye => {
+      const pupil = eye.querySelector('.pupil');
+      pupil.style.left = '35px'; // center
+      pupil.style.top = '35px';
+    });
+  }, 10000); // 10s
+}, 20000); // 20s
 </script>
+
 
 <div class="page-counter">3/8</div>
 </body>
