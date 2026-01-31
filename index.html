@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SYSTEM READY</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #050505;
+    color: #dcdcdc;
+    font-family: monospace;
+    overflow: hidden;
+    height: 100%;
+    cursor: crosshair;
+}
+
+#boot {
+    position: absolute;
+    inset: 0;
+    padding: 30px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.hidden {
+    display: none;
+}
+
+#ui {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    opacity: 0;
+    transform: scale(1.05);
+}
+
+h1 {
+    font-size: clamp(2rem, 6vw, 4rem);
+    letter-spacing: 0.2em;
+    text-align: center;
+    position: relative;
+}
+
+h1 span {
+    position: absolute;
+    inset: 0;
+    color: red;
+    opacity: 0.4;
+    transform: translate(3px, 0);
+}
+
+button {
+    background: none;
+    color: #dcdcdc;
+    border: 2px solid #dcdcdc;
+    padding: 1rem 3rem;
+    font-size: 1.1rem;
+    letter-spacing: 0.3em;
+    cursor: pointer;
+    position: relative;
+}
+
+button:hover {
+    color: #ff004c;
+    border-color: #ff004c;
+}
+
+.glitch {
+    animation: glitch 0.1s infinite;
+}
+
+@keyframes glitch {
+    from { transform: translate(0,0); }
+    to { transform: translate(2px,-2px); }
+}
+
+.slice {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    background: inherit;
+    pointer-events: none;
+    animation: tear 0.15s infinite;
+}
+
+@keyframes tear {
+    0% { clip-path: inset(0 0 90% 0); }
+    50% { clip-path: inset(10% 0 50% 0); }
+    100% { clip-path: inset(70% 0 10% 0); }
+}
+
+.fragment {
+    position: absolute;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    animation: fall 2s linear forwards;
+}
+
+@keyframes fall {
+    to {
+        transform: translateY(120vh) rotate(30deg);
+        opacity: 0;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="boot"></div>
+
+<div id="ui" class="hidden">
+    <h1>
+        HELLO
+        <span>HEllO</span>
+    </h1>
+    <button id="btn">cliCk</button>
+</div>
+
+<script>
+
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
+const bootText = [
+    "INITIALIZING JAVASCRIPT...",
+    "CHECKING CONSISTENCY",
+    "APPLYING FIX",
+    "APPLYING TEMPORARY FIX",
+    "FIX FAILED",
+    "EVERYTHING IS FINE",
+    "",
+    "READY."
+];
+
+const boot = document.getElementById("boot");
+const ui = document.getElementById("ui");
+const btn = document.getElementById("btn");
+
+let i = 0;
+
+const bootInterval = setInterval(() => {
+    boot.textContent += bootText[i++] + "\n";
+    if (i === bootText.length) {
+        clearInterval(bootInterval);
+        setTimeout(() => {
+            boot.classList.add("hidden");
+            ui.classList.remove("hidden");
+            ui.style.opacity = 1;
+            ui.style.transform = "scale(1)";
+        }, 600);
+    }
+}, 180);
+
+btn.addEventListener("mousemove", e => {
+    const dx = (Math.random() - 0.5) * 10;
+    const dy = (Math.random() - 0.5) * 10;
+    btn.style.transform = `translate(${dx}px, ${dy}px)`;
+});
+
+btn.addEventListener("click", () => {
+    document.body.classList.add("glitch");
+
+    for (let i = 0; i < 3; i++) {
+        const s = document.createElement("div");
+        s.className = "slice";
+        s.style.top = Math.random() * 100 + "%";
+        document.body.appendChild(s);
+    }
+
+    document.querySelectorAll("*").forEach(el => {
+        if (el.innerText && el.innerText.length < 40) {
+            const frag = document.createElement("div");
+            frag.className = "fragment";
+            frag.textContent = el.innerText;
+            frag.style.left = Math.random() * 100 + "vw";
+            frag.style.top = Math.random() * 50 + "vh";
+            document.body.appendChild(frag);
+        }
+    });
+
+    const ctx = new AudioContext();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "square";
+    o.frequency.value = 90;
+    o.connect(g);
+    g.connect(ctx.destination);
+    g.gain.value = 0.2;
+    o.start();
+    setTimeout(() => o.stop(), 300);
+
+    setTimeout(() => {
+        document.body.style.transform = "scale(0.3) rotate(-10deg)";
+        document.body.style.opacity = 0;
+    }, 900);
+
+    setTimeout(async () => {
+        try {
+            const response = await fetch('index.json');
+            if (!response.ok) throw new Error('Could not load index.json');
+            const pages = await response.json();
+            if (!pages.length) throw new Error('No pages found in index.json');
+
+            const randomPage = pages[Math.floor(Math.random() * pages.length)];
+
+            location.href = randomPage;
+
+        } catch (err) {
+            console.error('Redirect failed:', err);
+        }
+    }, 1600);
+});
+</script>
+
+</body>
+</html>
