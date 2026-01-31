@@ -1,0 +1,48 @@
+name: Index creations folder
+
+on:
+  schedule:
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate index.json
+        run: |
+          python << 'EOF'
+          import os, json
+
+          BASE_DIR = "creations"
+          output = []
+
+          for root, dirs, files in os.walk(BASE_DIR):
+              for file in files:
+                  if file.startswith("."):
+                      continue
+                  path = os.path.join(root, file)
+                  output.append(path.replace("\\", "/"))
+
+          output.sort(key=lambda s: s.lower())
+
+          with open("index.json", "w") as f:
+              json.dump(output, f, indent=2)
+
+          EOF
+
+      - name: Commit and push index.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add index.json
+          git commit --allow-empty -m "Daily creations index update"
+          git push

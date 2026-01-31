@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>limit_frame</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+html, body {
+  margin:0;
+  padding:0;
+  background:#111;
+  height:100%;
+  overflow:hidden;
+}
+#frame {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:80vw;
+  height:80vh;
+  transform:translate(-50%, -50%);
+  border:20px solid #222;
+  box-shadow:0 0 40px rgba(0,0,0,0.7);
+  background:black;
+  overflow:hidden;
+  position: relative;
+}
+#frame img {
+  position:absolute;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  filter: sepia(1);
+  top:0;
+  left:0;
+}
+.fade {
+  transition: none;
+}
+</style>
+    <link rel="stylesheet" href="../styles/counter.css">
+</head>
+<body>
+
+<div id="frame">
+  <img id="img1" class="fade" style="opacity:1;" src="">
+  <img id="img2" class="fade" style="opacity:0;" src="">
+</div>
+
+<script>
+const frame = document.getElementById('frame');
+const img1 = document.getElementById('img1');
+const img2 = document.getElementById('img2');
+
+let visible = img1;
+let hidden = img2;
+const CACHE_SIZE = 10;
+const cache = [];
+
+function preloadImage() {
+    const width = frame.clientWidth;
+    const height = frame.clientHeight;
+    const newImg = new Image();
+    newImg.src = `https://loremflickr.com/${width}/${height}/all?random=${Date.now()}-${Math.random()}`;
+    newImg.onload = () => {
+        cache.push(newImg);
+        if(cache.length > CACHE_SIZE) cache.shift();
+    }
+}
+
+for(let i=0;i<CACHE_SIZE;i++) preloadImage();
+
+function swapImage() {
+    if(cache.length===0) return;
+    const next = cache.shift();
+    hidden.src = next.src;
+    hidden.style.opacity = 1;
+    visible.style.opacity = 0;
+
+    const temp = visible;
+    visible = hidden;
+    hidden = temp;
+
+    preloadImage();
+}
+
+setInterval(swapImage, 200);
+</script>
+
+<div class="page-counter">7/7</div>
+</body>
+</html>

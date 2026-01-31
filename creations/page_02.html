@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>page_02</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #0e0e11;
+    color: #eaeaf0;
+    overflow: hidden;
+    height: 100%;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+#field {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.word {
+    position: absolute;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+    animation: bloom 6s linear forwards;
+}
+@keyframes bloom {
+    0%   { opacity: 0; filter: blur(6px); }
+    10%  { opacity: 0.9; filter: blur(0); }
+    80%  { opacity: 0.9; }
+    100% { opacity: 0; transform: translate(-50%, -60%) scale(1.1); }
+}
+.scanline {
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: scan 4s linear infinite;
+    pointer-events: none;
+}
+@keyframes scan {
+    from { top: -2px; }
+    to   { top: 100%; }
+}
+.vignette {
+    position: fixed;
+    inset: 0;
+    box-shadow: inset 0 0 120px rgba(0,0,0,0.8);
+    pointer-events: none;
+}
+</style>
+    <link rel="stylesheet" href="../styles/counter.css">
+</head>
+<body>
+
+<div id="field"></div>
+<div class="scanline"></div>
+<div class="vignette"></div>
+
+<script>
+const field = document.getElementById("field");
+
+const lexicon = [
+    "remember","static","breath","signal","soft-error",
+    "still","drift","almost","echo","wait",
+    "trace","pulse","maybe","listen","hold"
+];
+
+let mx = window.innerWidth / 2;
+let my = window.innerHeight / 2;
+
+window.addEventListener("mousemove", e => {
+    mx = e.clientX;
+    my = e.clientY;
+});
+
+function spawn(x, y) {
+    const w = document.createElement("div");
+    w.className = "word";
+    w.textContent = lexicon[Math.floor(Math.random() * lexicon.length)];
+    w.style.left = x + "px";
+    w.style.top = y + "px";
+    w.style.fontSize = (12 + Math.random() * 24) + "px";
+    w.style.letterSpacing = (Math.random() * 0.4) + "em";
+    w.style.color = `hsl(${200 + Math.random()*80}, 70%, 70%)`;
+    field.appendChild(w);
+
+    setTimeout(() => w.remove(), 6500);
+}
+
+setInterval(() => {
+    const spread = 120;
+    spawn(
+        mx + (Math.random() - 0.5) * spread,
+        my + (Math.random() - 0.5) * spread
+    );
+}, 180);
+
+setInterval(() => {
+    spawn(
+        Math.random() * window.innerWidth,
+        Math.random() * window.innerHeight
+    );
+}, 600);
+</script>
+
+<div class="page-counter">2/7</div>
+</body>
+</html>
