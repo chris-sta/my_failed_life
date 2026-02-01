@@ -38,7 +38,8 @@ let faceData = [];
 let facePixels = [];
 
 const img = new Image();
-img.src = './resources/image01.jpg';
+img.src = '../resources/image01.jpg';
+img.crossOrigin = "anonymous";
 
 img.onload = function() {
     const hiddenCanvas = document.createElement('canvas');
