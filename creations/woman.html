@@ -38,7 +38,7 @@ let faceData = [];
 let facePixels = [];
 
 const img = new Image();
-img.src = '/resources/image01.jpg';
+img.src = './resources/image01.jpg';
 img.crossOrigin = "anonymous";
 
 img.onload = function() {
@@ -113,8 +113,8 @@ window.addEventListener('resize', () => {
 
 <div class="page-counter">13/13</div>
 <div class="page-buttons">
-    <button onclick="location.href='/'">Home</button>
-    <button onclick="location.href='/inventory.html'">Inventory</button>
+    <button onclick="location.href='./'">Home</button>
+    <button onclick="location.href='inventory.html'">Inventory</button>
 </div>
 
 </body>

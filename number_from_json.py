@@ -46,8 +46,8 @@ for index, path in enumerate(paths, start=1):
     navigation_html = f"""
 <div class="page-counter">{index}/{total}</div>
 <div class="page-buttons">
-    <button onclick="location.href='/'">Home</button>
-    <button onclick="location.href='/inventory.html'">Inventory</button>
+    <button onclick="location.href='./'">Home</button>
+    <button onclick="location.href='inventory.html'">Inventory</button>
 </div>
 """
 
