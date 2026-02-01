@@ -30,7 +30,6 @@ canvas {
     <link rel="stylesheet" href="../styles/counter.css">
 </head>
 <body>
-<div id="percentage">0%</div>
 
 <canvas id="canvasBg"></canvas>
 <canvas id="canvasOverlay"></canvas>
@@ -95,21 +94,10 @@ function drawRagCursor() {
   ctxCursor.restore();
 }
 
-function calculatePercentage() {
-  const data = ctxOverlay.getImageData(0, 0, width, height).data;
-  let clearedPixels = 0;
-  for (let i = 3; i < data.length; i += 4) {
-    if (data[i] === 0) clearedPixels++;
-  }
-  const percent = Math.round((clearedPixels / (width*height)) * 100);
-  document.getElementById('percentage').innerText = percent + '%';
-}
-
 function animate() {
   if(!bgLoaded) return requestAnimationFrame(animate);
   wipeBlue();
   drawRagCursor();
-  calculatePercentage();
   mouse.prevX = mouse.x;
   mouse.prevY = mouse.y;
   requestAnimationFrame(animate);
