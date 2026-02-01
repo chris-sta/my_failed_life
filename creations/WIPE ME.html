@@ -50,7 +50,7 @@ let width = canvasBg.width = canvasOverlay.width = canvasCursor.width = window.i
 let height = canvasBg.height = canvasOverlay.height = canvasCursor.height = window.innerHeight;
 
 const bg = new Image();
-bg.src = './resources/image02.jpg';
+bg.src = '../resources/image02.jpg';
 let bgLoaded = false;
 bg.onload = () => {
   bgLoaded = true;
@@ -69,7 +69,7 @@ function drawOverlay() {
 }
 
 const rag = new Image();
-rag.src = './resources/rag.png';
+rag.src = '../resources/rag.png';
 const ragSize = 280;
 
 let mouse = {x: width/2, y: height/2, prevX: width/2, prevY: height/2};
