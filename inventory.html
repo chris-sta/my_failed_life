@@ -165,7 +165,15 @@ function goTo(url) {
 }
 </script>
 <div class="page-buttons">
-<button onclick="location.href='./'">Home</button>
+<button onclick="location.href='https://chris-sta.github.io/my_failed_life/index.html'">Home</button>
 </div>
+
+<script>
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        location.reload();
+    }
+});
+</script>
 </body>
 </html>
