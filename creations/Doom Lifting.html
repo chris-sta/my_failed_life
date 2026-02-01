@@ -42,11 +42,11 @@ class Figure{
     draw(ctx){
         ctx.fillStyle="#111";
         ctx.beginPath();
-        ctx.arc(this.x,this.y-30,20,0,Math.PI*2); // head
+        ctx.arc(this.x,this.y-30,20,0,Math.PI*2);
         ctx.fill();
-        ctx.fillRect(this.x-5,this.y-30,10,50); // body
-        ctx.fillRect(this.x-15,this.y+20,5,20); // left leg
-        ctx.fillRect(this.x+10,this.y+20,5,20); // right leg
+        ctx.fillRect(this.x-5,this.y-30,10,50);
+        ctx.fillRect(this.x-15,this.y+20,5,20);
+        ctx.fillRect(this.x+10,this.y+20,5,20);
     }
 }
 

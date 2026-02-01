@@ -33,7 +33,6 @@ for index, path in enumerate(paths, start=1):
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # Remove old counters
     content = counter_re.sub("", content)
 
     if CSS_LINK not in content:
@@ -55,6 +54,3 @@ for index, path in enumerate(paths, start=1):
         f.write(content)
 
 print("COMPLETE ✅")
-
-# cd C:\Users\Chris\Documents\Repos\my_failed_art
-# py number_from_json.py

@@ -15897,7 +15897,6 @@ function typeText(text) {
       return;
     }
     page.textContent += (i === 0 ? "" : " ") + words[i];
-    page.scrollTop = page.scrollHeight;
     i++;
   }, MS_PER_WORD);
 }

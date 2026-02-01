@@ -8,7 +8,7 @@ output = []
 for root, dirs, files in os.walk(BASE_DIR):
     for file in files:
         path = os.path.join(root, file)
-        output.append(path.replace("\\", "/"))  # normalize Windows paths
+        output.append(path.replace("\\", "/"))
 
 output.sort(key=lambda s: s.lower())
 
