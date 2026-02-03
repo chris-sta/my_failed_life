@@ -41,4 +41,4 @@ new_html_content = re.sub(
 with open(INVENTORY_FILE, "w", encoding="utf-8") as f:
     f.write(new_html_content)
 
-print(f"Inventory updated with {len(paths)} pages ✅")
+print(f"inventory.html updated!")

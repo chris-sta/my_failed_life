@@ -65,5 +65,3 @@ for index, path in enumerate(paths, start=1):
 
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
-
-print("COMPLETE ✅")

@@ -12,4 +12,4 @@ for file_path in files:
 with open("hiventory.html", "w") as f:
     f.write("\n".join(link_lines))
 
-print("hiventory.html updated successfully!")
+print("hiventory.html updated!")
