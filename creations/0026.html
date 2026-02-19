@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stress Test</title>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #0f1220;
+    color: #fff;
+    font-family: system-ui, sans-serif;
+  }
+
+  .gauge-container {
+    width: min(80vw, 300px);
+  }
+
+  svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .value {
+    text-anchor: middle;
+    dominant-baseline: middle;
+    font-size: 2.5rem;
+    fill: #fff;
+    font-weight: bold;
+  }
+
+  button {
+    margin-top: 30px;
+    padding: 14px 24px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #ff4d4d;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  button:active {
+    transform: scale(0.97);
+  }
+</style>
+    <link rel="stylesheet" href="../styles/counter.css">
+</head>
+
+<body>
+
+<div class="gauge-container">
+  <svg viewBox="0 0 200 200">
+    <circle cx="100" cy="100" r="90" stroke="#333" stroke-width="15" fill="none"/>
+    <circle
+      cx="100"
+      cy="100"
+      r="90"
+      stroke="#00e6ff"
+      stroke-width="15"
+      fill="none"
+      stroke-dasharray="565"
+      stroke-dashoffset="565"
+      stroke-linecap="round"
+      transform="rotate(-90 100 100)"
+      id="progress"
+    />
+    <text x="100" y="105" class="value" id="valueText">0</text>
+  </svg>
+</div>
+
+<button id="startBtn">Begin Stress Test</button>
+
+<script>
+let running = false;
+let gaugeValue = 0;
+const maxGauge = 1000;
+const circle = document.getElementById("progress");
+const valueText = document.getElementById("valueText");
+const dashTotal = 565;
+
+let junkMemory = [];
+let domSpamContainer;
+
+function updateGauge(value) {
+  const ratio = value / maxGauge;
+  circle.style.strokeDashoffset = dashTotal * (1 - ratio);
+  valueText.textContent = Math.floor(value);
+}
+
+function cpuStress() {
+  let x = 0;
+  for (let i = 0; i < 200000; i++) {
+    x += Math.sqrt(i) * Math.random();
+  }
+}
+
+function memoryStress() {
+  junkMemory.push(new Array(50000).fill(Math.random()));
+}
+
+function domStress() {
+  if (!domSpamContainer) {
+    domSpamContainer = document.createElement("div");
+    document.body.appendChild(domSpamContainer);
+  }
+
+  for (let i = 0; i < 20; i++) {
+    const div = document.createElement("div");
+    div.textContent = "🔥";
+    domSpamContainer.appendChild(div);
+  }
+}
+
+function gpuStress() {
+  if (!window.canvas) {
+    canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 800;
+    document.body.appendChild(canvas);
+    ctx = canvas.getContext("2d");
+  }
+
+  for (let i = 0; i < 200; i++) {
+    ctx.fillStyle = `hsl(${Math.random() * 360},100%,50%)`;
+    ctx.fillRect(
+      Math.random() * 800,
+      Math.random() * 800,
+      20,
+      20
+    );
+  }
+}
+
+function stressLoop() {
+  if (!running) return;
+
+  cpuStress();
+  memoryStress();
+  domStress();
+  gpuStress();
+
+  gaugeValue = Math.min(maxGauge, gaugeValue + 5);
+  updateGauge(gaugeValue);
+
+  requestAnimationFrame(stressLoop);
+}
+
+document.getElementById("startBtn").onclick = () => {
+  if (running) return;
+  running = true;
+  stressLoop();
+};
+</script>
+
+<div class="page-counter">26/36</div>
+<div class="page-buttons">
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/index.html'">
+        Home
+    </button>
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/inventory.html'">
+        Inventory
+    </button>
+</div>
+
+</body>
+</html>

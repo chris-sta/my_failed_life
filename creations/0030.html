@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tunnel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        body {
+            background: #000;
+            font-family: 'Courier New', monospace;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #555;
+            font-size: 11px;
+            text-shadow: 0 0 3px #000;
+            z-index: 10;
+            opacity: 0.6;
+        }
+        
+        #vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0,0,0,0.7) 100%);
+            z-index: 5;
+        }
+    </style>
+    <link rel="stylesheet" href="../styles/counter.css">
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="vignette"></div>
+    <div id="info">click_to_enable_audio</div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        let scene, camera, renderer, tunnel, particles;
+        let flickerLight, ambientLight;
+        let audioContext, audioEnabled = false;
+        let creakOscillator, droneOscillator, distantOscillator;
+        
+        function init() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x0a0a0a, 0.08);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 2);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            ambientLight = new THREE.AmbientLight(0x1a1a1a, 0.3);
+            scene.add(ambientLight);
+            
+            flickerLight = new THREE.PointLight(0xff8844, 0.8, 50);
+            flickerLight.position.set(2, 1, -30);
+            scene.add(flickerLight);
+            
+            const dimLight = new THREE.PointLight(0x553311, 0.3, 20);
+            dimLight.position.set(-1.5, 0.5, -15);
+            scene.add(dimLight);
+            
+            createTunnel();
+            
+            createParticles();
+            
+            createWallDetails();
+            
+            window.addEventListener('resize', onWindowResize, false);
+            
+            document.addEventListener('click', enableAudio, { once: true });
+            
+            animate();
+        }
+        
+        function createTunnel() {
+            const tunnelGroup = new THREE.Group();
+            
+            const tunnelGeometry = new THREE.CylinderGeometry(4, 4, 80, 32, 1, true);
+            
+            const tunnelMaterial = new THREE.MeshStandardMaterial({
+                color: 0x2a2420,
+                roughness: 0.95,
+                metalness: 0.1,
+                side: THREE.BackSide,
+                flatShading: false
+            });
+            
+            tunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
+            tunnel.rotation.x = Math.PI / 2;
+            tunnel.position.z = -40;
+            
+            const positions = tunnelGeometry.attributes.position;
+            for (let i = 0; i < positions.count; i++) {
+                const x = positions.getX(i);
+                const y = positions.getY(i);
+                const z = positions.getZ(i);
+                
+                const noise = (Math.random() - 0.5) * 0.15;
+                positions.setX(i, x + noise);
+                positions.setY(i, y + noise);
+                positions.setZ(i, z + noise);
+            }
+            positions.needsUpdate = true;
+            
+            tunnelGroup.add(tunnel);
+            
+            const floorGeometry = new THREE.PlaneGeometry(8, 80);
+            const floorMaterial = new THREE.MeshStandardMaterial({
+                color: 0x1a1410,
+                roughness: 0.98,
+                metalness: 0.05
+            });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.y = -4;
+            floor.position.z = -40;
+            tunnelGroup.add(floor);
+            
+            const ceiling = floor.clone();
+            ceiling.rotation.x = Math.PI / 2;
+            ceiling.position.y = 4;
+            tunnelGroup.add(ceiling);
+            
+            scene.add(tunnelGroup);
+        }
+        
+        function createWallDetails() {
+            for (let i = 0; i < 15; i++) {
+                const pipeGeometry = new THREE.CylinderGeometry(0.08, 0.08, 6, 8);
+                const pipeMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x442211,
+                    roughness: 0.9,
+                    metalness: 0.3
+                });
+                const pipe = new THREE.Mesh(pipeGeometry, pipeMaterial);
+                pipe.rotation.z = Math.PI / 2;
+                pipe.position.set(
+                    Math.random() * 3 - 1.5,
+                    3.5,
+                    -i * 5 - Math.random() * 3
+                );
+                scene.add(pipe);
+            }
+            
+            for (let i = 0; i < 8; i++) {
+                const beamGeometry = new THREE.BoxGeometry(0.3, 8, 0.3);
+                const beamMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x332211,
+                    roughness: 0.95
+                });
+                
+                const leftBeam = new THREE.Mesh(beamGeometry, beamMaterial);
+                leftBeam.position.set(-3.5, 0, -i * 10 - 5);
+                scene.add(leftBeam);
+                
+                const rightBeam = leftBeam.clone();
+                rightBeam.position.set(3.5, 0, -i * 10 - 5);
+                scene.add(rightBeam);
+            }
+            
+            for (let i = 0; i < 20; i++) {
+                const debrisGeometry = new THREE.BoxGeometry(
+                    Math.random() * 0.3 + 0.1,
+                    Math.random() * 0.5 + 0.2,
+                    Math.random() * 0.3 + 0.1
+                );
+                const debrisMaterial = new THREE.MeshStandardMaterial({
+                    color: Math.random() > 0.5 ? 0x3a2a1a : 0x2a2a2a,
+                    roughness: 0.9
+                });
+                const debris = new THREE.Mesh(debrisGeometry, debrisMaterial);
+                debris.position.set(
+                    Math.random() * 6 - 3,
+                    Math.random() * 2 + 2,
+                    -Math.random() * 60 - 5
+                );
+                debris.rotation.set(
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI
+                );
+                scene.add(debris);
+            }
+        }
+        
+        function createParticles() {
+            const particleCount = 500;
+            const particlesGeometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const velocities = [];
+            
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = Math.random() * 8 - 4;
+                positions[i + 1] = Math.random() * 8 - 4;
+                positions[i + 2] = -Math.random() * 60;
+                
+                velocities.push({
+                    x: (Math.random() - 0.5) * 0.002,
+                    y: -Math.random() * 0.005 - 0.001,
+                    z: Math.random() * 0.01 + 0.005
+                });
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const particlesMaterial = new THREE.PointsMaterial({
+                color: 0x666666,
+                size: 0.03,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
+            });
+            
+            particles = new THREE.Points(particlesGeometry, particlesMaterial);
+            particles.userData.velocities = velocities;
+            scene.add(particles);
+        }
+        
+        function enableAudio() {
+            if (audioEnabled) return;
+            audioEnabled = true;
+            
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            droneOscillator = audioContext.createOscillator();
+            droneOscillator.type = 'sawtooth';
+            droneOscillator.frequency.value = 40;
+            const droneGain = audioContext.createGain();
+            droneGain.gain.value = 0.03;
+            droneOscillator.connect(droneGain);
+            droneGain.connect(audioContext.destination);
+            droneOscillator.start();
+            
+            distantOscillator = audioContext.createOscillator();
+            distantOscillator.type = 'triangle';
+            distantOscillator.frequency.value = 60;
+            const distantGain = audioContext.createGain();
+            distantGain.gain.value = 0.015;
+            distantOscillator.connect(distantGain);
+            distantGain.connect(audioContext.destination);
+            distantOscillator.start();
+            
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    const creak = audioContext.createOscillator();
+                    creak.type = 'square';
+                    creak.frequency.value = Math.random() * 200 + 100;
+                    const creakGain = audioContext.createGain();
+                    creakGain.gain.value = 0.02;
+                    creak.connect(creakGain);
+                    creakGain.connect(audioContext.destination);
+                    creak.start();
+                    creakGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                    creak.stop(audioContext.currentTime + 0.5);
+                }
+            }, 3000);
+            
+            setInterval(() => {
+                if (Math.random() > 0.85) {
+                    const strange = audioContext.createOscillator();
+                    strange.type = 'sine';
+                    strange.frequency.value = Math.random() * 400 + 200;
+                    const strangeGain = audioContext.createGain();
+                    strangeGain.gain.value = 0.01;
+                    strange.connect(strangeGain);
+                    strangeGain.connect(audioContext.destination);
+                    strange.start();
+                    strange.frequency.exponentialRampToValueAtTime(
+                        strange.frequency.value * 0.5,
+                        audioContext.currentTime + 2
+                    );
+                    strangeGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2);
+                    strange.stop(audioContext.currentTime + 2);
+                }
+            }, 8000);
+            
+            document.getElementById('info').textContent = 'Audio Active';
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const time = Date.now() * 0.001;
+            if (Math.random() > 0.92) {
+                flickerLight.intensity = Math.random() * 0.4 + 0.4;
+            } else {
+                flickerLight.intensity = 0.8 + Math.sin(time * 10) * 0.1;
+            }
+            
+            camera.position.x = Math.sin(time * 0.3) * 0.1;
+            camera.position.y = Math.cos(time * 0.2) * 0.05;
+            camera.rotation.z = Math.sin(time * 0.25) * 0.01;
+            
+            const positions = particles.geometry.attributes.position.array;
+            const velocities = particles.userData.velocities;
+            
+            for (let i = 0; i < positions.length; i += 3) {
+                const index = i / 3;
+                positions[i] += velocities[index].x;
+                positions[i + 1] += velocities[index].y;
+                positions[i + 2] += velocities[index].z;
+                
+                if (positions[i + 2] > 5) {
+                    positions[i + 2] = -60;
+                    positions[i] = Math.random() * 8 - 4;
+                    positions[i + 1] = Math.random() * 8 - 4;
+                }
+                
+                if (positions[i + 1] < -4) {
+                    positions[i + 1] = 4;
+                }
+            }
+            particles.geometry.attributes.position.needsUpdate = true;
+            
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        init();
+    </script>
+
+<div class="page-counter">30/36</div>
+<div class="page-buttons">
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/index.html'">
+        Home
+    </button>
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/inventory.html'">
+        Inventory
+    </button>
+</div>
+
+</body>
+</html>

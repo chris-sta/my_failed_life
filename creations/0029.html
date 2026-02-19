@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winter Train Journey</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: #1a1510;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <link rel="stylesheet" href="../styles/counter.css">
+</head>
+<body>
+    <canvas id="trainCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('trainCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let scrollOffset = 0;
+        const scrollSpeed = 0.8;
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Tree {
+            constructor(x, baseY, depth) {
+                this.baseX = x;
+                this.baseY = baseY;
+                this.depth = depth;
+                this.scale = 1 - depth * 0.15;
+                this.height = (150 + Math.random() * 100) * this.scale;
+                this.width = (15 + Math.random() * 10) * this.scale;
+                this.snowLoad = Math.random();
+                this.offset = Math.random() * 1000;
+            }
+
+            draw(offset) {
+                const x = this.baseX - offset * (1 - this.depth * 0.7);
+                const y = this.baseY;
+
+                if (x < -100 || x > width + 100) return;
+
+                const opacity = 1 - this.depth * 0.5;
+                const blur = this.depth * 3;
+
+                ctx.save();
+                ctx.filter = `blur(${blur}px)`;
+
+                const trunkGradient = ctx.createLinearGradient(x, y, x, y - this.height);
+                trunkGradient.addColorStop(0, `rgba(45, 35, 30, ${opacity})`);
+                trunkGradient.addColorStop(1, `rgba(35, 28, 25, ${opacity})`);
+
+                ctx.fillStyle = trunkGradient;
+                ctx.beginPath();
+                ctx.moveTo(x - this.width / 2, y);
+                ctx.lineTo(x - this.width / 3, y - this.height * 0.7);
+                ctx.lineTo(x + this.width / 3, y - this.height * 0.7);
+                ctx.lineTo(x + this.width / 2, y);
+                ctx.closePath();
+                ctx.fill();
+
+                const branchLevels = 5;
+                for (let i = 0; i < branchLevels; i++) {
+                    const branchY = y - this.height * 0.3 - (i * this.height * 0.12);
+                    const branchWidth = (this.width * 8 - i * this.width * 1.2) * (1 + Math.sin(this.offset + i) * 0.1);
+                    
+                    const pineGradient = ctx.createRadialGradient(x, branchY, 0, x, branchY, branchWidth);
+                    pineGradient.addColorStop(0, `rgba(25, 45, 35, ${opacity})`);
+                    pineGradient.addColorStop(0.7, `rgba(20, 38, 30, ${opacity})`);
+                    pineGradient.addColorStop(1, `rgba(15, 30, 25, ${opacity * 0.8})`);
+                    
+                    ctx.fillStyle = pineGradient;
+                    ctx.beginPath();
+                    ctx.ellipse(x, branchY, branchWidth, this.height * 0.15, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (this.snowLoad > 0.3) {
+                        const snowGradient = ctx.createRadialGradient(x, branchY - 5, 0, x, branchY - 5, branchWidth * 0.9);
+                        snowGradient.addColorStop(0, `rgba(245, 250, 255, ${opacity * 0.9})`);
+                        snowGradient.addColorStop(0.5, `rgba(230, 240, 250, ${opacity * 0.7})`);
+                        snowGradient.addColorStop(1, `rgba(220, 235, 245, ${opacity * 0.3})`);
+                        
+                        ctx.fillStyle = snowGradient;
+                        ctx.beginPath();
+                        ctx.ellipse(x, branchY - 5, branchWidth * 0.85, this.height * 0.08, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                ctx.restore();
+            }
+        }
+
+        class Snowflake {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = -10;
+                this.size = Math.random() * 3 + 1;
+                this.speed = Math.random() * 1 + 0.5;
+                this.drift = Math.random() * 0.5 - 0.25;
+                this.opacity = Math.random() * 0.6 + 0.4;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.x += this.drift + scrollSpeed * 0.3;
+                
+                if (this.y > height || this.x > width + 10 || this.x < -10) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.shadowBlur = 4;
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        const treeLayers = [
+            { depth: 0.8, count: 40, yRange: [height * 0.5, height * 0.6] },
+            { depth: 0.6, count: 30, yRange: [height * 0.45, height * 0.55] },
+            { depth: 0.4, count: 25, yRange: [height * 0.4, height * 0.5] },
+            { depth: 0.2, count: 20, yRange: [height * 0.35, height * 0.45] },
+            { depth: 0.0, count: 15, yRange: [height * 0.3, height * 0.4] }
+        ];
+
+        let trees = [];
+        const snowflakes = [];
+        const snowflakeCount = 200;
+
+        function initTrees() {
+            trees = [];
+            treeLayers.forEach(layer => {
+                for (let i = 0; i < layer.count; i++) {
+                    const x = (i / layer.count) * width * 3;
+                    const y = layer.yRange[0] + Math.random() * (layer.yRange[1] - layer.yRange[0]);
+                    trees.push(new Tree(x, y, layer.depth));
+                }
+            });
+            trees.sort((a, b) => b.depth - a.depth);
+        }
+
+        function initSnowflakes() {
+            for (let i = 0; i < snowflakeCount; i++) {
+                const flake = new Snowflake();
+                flake.y = Math.random() * height;
+                snowflakes.push(flake);
+            }
+        }
+
+        initTrees();
+        initSnowflakes();
+
+        function drawSky() {
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, height * 0.6);
+            skyGradient.addColorStop(0, '#c8d5e0');
+            skyGradient.addColorStop(0.5, '#dce4ea');
+            skyGradient.addColorStop(1, '#e8eef2');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, width, height * 0.6);
+        }
+
+        function drawGround() {
+            const groundGradient = ctx.createLinearGradient(0, height * 0.6, 0, height);
+            groundGradient.addColorStop(0, '#f0f4f8');
+            groundGradient.addColorStop(0.3, '#e5ebf0');
+            groundGradient.addColorStop(1, '#d8dfe5');
+            ctx.fillStyle = groundGradient;
+            ctx.fillRect(0, height * 0.6, width, height * 0.4);
+
+            ctx.fillStyle = 'rgba(200, 215, 225, 0.3)';
+            for (let i = 0; i < 10; i++) {
+                const y = height * 0.6 + (i * height * 0.04);
+                const waveOffset = Math.sin(scrollOffset * 0.01 + i * 0.5) * 20;
+                ctx.beginPath();
+                ctx.ellipse(width / 2 + waveOffset, y, width * 0.6, 10 - i, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawWindowFrame() {
+            const frameWidth = width * 0.08;
+            const frameColor = '#2d1f1a';
+            const woodGrain = '#3d2f2a';
+
+            ctx.fillStyle = frameColor;
+            ctx.fillRect(0, 0, frameWidth, height);
+            ctx.fillRect(width - frameWidth, 0, frameWidth, height);
+            ctx.fillRect(0, 0, width, frameWidth * 0.8);
+            ctx.fillRect(0, height - frameWidth * 0.8, width, frameWidth * 0.8);
+
+            ctx.strokeStyle = woodGrain;
+            ctx.lineWidth = 3;
+            for (let i = 0; i < 5; i++) {
+                const x = frameWidth * 0.2 + i * 8;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+                
+                const x2 = width - frameWidth * 0.2 - i * 8;
+                ctx.beginPath();
+                ctx.moveTo(x2, 0);
+                ctx.lineTo(x2, height);
+                ctx.stroke();
+            }
+
+            const crossbeam = height / 2;
+            ctx.fillStyle = frameColor;
+            ctx.fillRect(0, crossbeam - frameWidth * 0.3, width, frameWidth * 0.6);
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.fillRect(frameWidth, frameWidth * 0.8, width - frameWidth * 2, height - frameWidth * 1.6);
+            
+            const glareGradient = ctx.createLinearGradient(frameWidth, frameWidth * 0.8, width - frameWidth, frameWidth * 0.8);
+            glareGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+            glareGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.08)');
+            glareGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.08)');
+            glareGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = glareGradient;
+            ctx.fillRect(frameWidth, frameWidth * 0.8, width - frameWidth * 2, height * 0.3);
+            ctx.restore();
+
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(frameWidth, frameWidth * 0.8, width - frameWidth * 2, height - frameWidth * 1.6);
+            ctx.shadowBlur = 0;
+        }
+
+        function drawInteriorReflection() {
+            const gradient = ctx.createRadialGradient(width * 0.3, height * 0.7, 0, width * 0.3, height * 0.7, width * 0.4);
+            gradient.addColorStop(0, 'rgba(80, 60, 40, 0.15)');
+            gradient.addColorStop(0.5, 'rgba(60, 45, 30, 0.08)');
+            gradient.addColorStop(1, 'rgba(40, 30, 20, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            drawSky();
+            drawGround();
+
+            trees.forEach(tree => tree.draw(scrollOffset));
+
+            snowflakes.forEach(flake => {
+                flake.update();
+                flake.draw();
+            });
+
+            drawInteriorReflection();
+            drawWindowFrame();
+
+            scrollOffset += scrollSpeed;
+
+            trees.forEach(tree => {
+                const effectiveX = tree.baseX - scrollOffset * (1 - tree.depth * 0.7);
+                if (effectiveX < -200) {
+                    tree.baseX += width * 3;
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+
+<div class="page-counter">29/36</div>
+<div class="page-buttons">
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/index.html'">
+        Home
+    </button>
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/inventory.html'">
+        Inventory
+    </button>
+</div>
+
+</body>
+</html>

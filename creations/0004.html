@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Norbletex</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 1200px;
+            position: relative;
+        }
+
+        .scoreboard {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .player-score {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            min-width: 120px;
+        }
+
+        .player-score.current {
+            background: rgba(255,215,0,0.3);
+            border: 2px solid gold;
+        }
+
+        .game-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .table {
+            background: rgba(0,100,0,0.6);
+            border-radius: 20px;
+            padding: 40px;
+            min-height: 400px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .played-cards {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .played-card {
+            position: relative;
+        }
+
+        .played-card-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 3px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .hand {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .card {
+            width: 80px;
+            height: 112px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            position: relative;
+            font-weight: bold;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+        }
+
+        .card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .card.disabled:hover {
+            transform: none;
+        }
+
+        .card.hearts {
+            color: #e74c3c;
+        }
+
+        .card.diamonds {
+            color: #e74c3c;
+        }
+
+        .card.clubs {
+            color: #2c3e50;
+        }
+
+        .card.spades {
+            color: #2c3e50;
+        }
+
+        .card-rank {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .card-suit {
+            font-size: 32px;
+        }
+
+        .button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+            margin: 5px;
+        }
+
+        .button:hover {
+            background: #2980b9;
+        }
+
+        .button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 20px;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            min-height: 50px;
+        }
+
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 1000;
+            border: 3px solid gold;
+        }
+
+        .game-over h2 {
+            margin-bottom: 20px;
+            color: gold;
+        }
+    </style>
+    <link rel="stylesheet" href="../styles/counter.css">
+</head>
+<body>
+    <h1>♥ Blorpzak Wizzlenorf Gribblefunt ♥</h1>
+    
+    <div class="game-container">
+        <div class="scoreboard" id="scoreboard"></div>
+        
+        <div class="game-info" id="gameInfo">
+            Snorgle "Vrimbok Plox Garbunkel" moof quizzle!
+        </div>
+
+        <div class="message" id="message"></div>
+        
+        <div class="table" id="table">
+            <div class="played-cards" id="playedCards"></div>
+        </div>
+        
+        <div class="hand" id="playerHand"></div>
+        
+        <div class="controls">
+            <button class="button" id="startButton" onclick="startNewGame()">Vrimbok Plox Garbunkel</button>
+        </div>
+    </div>
+
+    <script>
+        const suits = ['♥', '♦', '♣', '♠'];
+        const suitNames = ['hearts', 'diamonds', 'clubs', 'spades'];
+        const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        const rankValues = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14};
+
+        let deck = [];
+        let players = [];
+        let currentTrick = [];
+        let currentPlayer = 0;
+        let heartsBroken = false;
+        let roundScores = [];
+        let totalScores = [0, 0, 0];
+        let gameInProgress = false;
+        let leadingSuit = null;
+
+        function createDeck() {
+            deck = [];
+            for (let suit of suits) {
+                for (let rank of ranks) {
+                    const suitIndex = suits.indexOf(suit);
+                    deck.push({
+                        rank: rank,
+                        suit: suit,
+                        suitName: suitNames[suitIndex],
+                        value: rankValues[rank]
+                    });
+                }
+            }
+            return deck;
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function dealCards() {
+            shuffle(deck);
+            players = [
+                { name: 'Glorp', hand: [], tricks: 0, isHuman: true },
+                { name: 'Znorkblat', hand: [], tricks: 0, isHuman: false },
+                { name: 'Flibberquax', hand: [], tricks: 0, isHuman: false }
+            ];
+
+            for (let i = 0; i < 17; i++) {
+                players.forEach(player => {
+                    player.hand.push(deck.pop());
+                });
+            }
+
+            players.forEach(player => {
+                player.hand.sort((a, b) => {
+                    if (a.suitName !== b.suitName) {
+                        return suitNames.indexOf(a.suitName) - suitNames.indexOf(b.suitName);
+                    }
+                    return a.value - b.value;
+                });
+            });
+
+            currentPlayer = -1;
+            players.forEach((player, idx) => {
+                if (player.hand.some(card => card.rank === '2' && card.suit === '♣')) {
+                    currentPlayer = idx;
+                }
+            });
+            
+            if (currentPlayer === -1) currentPlayer = 0;
+        }
+
+        function startNewGame() {
+            createDeck();
+            dealCards();
+            currentTrick = [];
+            heartsBroken = false;
+            roundScores = [0, 0, 0];
+            leadingSuit = null;
+            gameInProgress = true;
+            
+            updateDisplay();
+            showMessage(`${players[currentPlayer].name} fribbles! ${currentPlayer === 0 ? 'Zonk a plimble.' : ''}`);
+            
+            if (currentPlayer !== 0) {
+                setTimeout(botPlay, 1000);
+            }
+        }
+
+        function canPlayCard(card, playerIndex) {
+            const player = players[playerIndex];
+            
+            if (currentTrick.length === 0) {
+                if (players.some(p => p.hand.some(c => c.rank === '2' && c.suit === '♣'))) {
+                    if (player.hand.some(c => c.rank === '2' && c.suit === '♣')) {
+                        return card.rank === '2' && card.suit === '♣';
+                    }
+                }
+                if (card.suit === '♥' && !heartsBroken) {
+                    return player.hand.every(c => c.suit === '♥');
+                }
+                return true;
+            }
+            
+            const hasSuit = player.hand.some(c => c.suitName === leadingSuit);
+            if (hasSuit) {
+                return card.suitName === leadingSuit;
+            }
+            
+            return true;
+        }
+
+        function playCard(playerIndex, cardIndex) {
+            const player = players[playerIndex];
+            const card = player.hand[cardIndex];
+            
+            if (!canPlayCard(card, playerIndex)) {
+                if (playerIndex === 0) {
+                    showMessage("Blargon! Mizzlewhop that plorbsnack! Vroot quizzle or zonk any plimble if you can't.");
+                }
+                return false;
+            }
+
+            if (currentTrick.length === 0) {
+                leadingSuit = card.suitName;
+            }
+
+            player.hand.splice(cardIndex, 1);
+            currentTrick.push({ card, player: playerIndex });
+
+            if (card.suit === '♥') {
+                heartsBroken = true;
+            }
+
+            updateDisplay();
+
+            if (currentTrick.length === 3) {
+                setTimeout(completeTrick, 1500);
+            } else {
+                currentPlayer = (currentPlayer + 1) % 3;
+                updateDisplay();
+                
+                if (currentPlayer !== 0) {
+                    setTimeout(botPlay, 800);
+                } else {
+                    showMessage("Glorp's blorpzak!");
+                }
+            }
+
+            return true;
+        }
+
+        function completeTrick() {
+            let winningIndex = 0;
+            let highestValue = 0;
+
+            currentTrick.forEach((play, idx) => {
+                if (play.card.suitName === leadingSuit && play.card.value > highestValue) {
+                    highestValue = play.card.value;
+                    winningIndex = idx;
+                }
+            });
+
+            const winner = currentTrick[winningIndex].player;
+            players[winner].tricks++;
+
+            let points = 0;
+            currentTrick.forEach(play => {
+                if (play.card.suit === '♥') points += 1;
+                if (play.card.rank === 'Q' && play.card.suit === '♠') points += 13;
+            });
+
+            roundScores[winner] += points;
+
+            showMessage(`${players[winner].name} grobbles the flimjab! (+${points} snorplings)`);
+
+            currentTrick = [];
+            leadingSuit = null;
+            currentPlayer = winner;
+
+            if (players.every(p => p.hand.length === 0)) {
+                setTimeout(endRound, 2000);
+            } else {
+                setTimeout(() => {
+                    updateDisplay();
+                    if (currentPlayer !== 0) {
+                        setTimeout(botPlay, 800);
+                    } else {
+                        showMessage("Glorp's blorpzak to vrimbok!");
+                    }
+                }, 2000);
+            }
+        }
+
+        function endRound() {
+            for (let i = 0; i < 3; i++) {
+                totalScores[i] += roundScores[i];
+            }
+
+            updateDisplay();
+
+            const maxScore = Math.max(...totalScores);
+            if (maxScore >= 100) {
+                endGame();
+            } else {
+                showMessage(`Flimjab kverfed! Snorgle "Vrimbok Plox Garbunkel" for anoodle blorp.`);
+                gameInProgress = false;
+            }
+        }
+
+        function endGame() {
+            const minScore = Math.min(...totalScores);
+            const winner = totalScores.indexOf(minScore);
+            
+            const gameOverDiv = document.createElement('div');
+            gameOverDiv.className = 'game-over';
+            gameOverDiv.innerHTML = `
+                <h2>🎉 Garbunkel Kverfed! 🎉</h2>
+                <p style="font-size: 24px; margin: 20px 0;">
+                    ${players[winner].name} grobbles with ${totalScores[winner]} snorplings!
+                </p>
+                <p style="margin: 20px 0;">Finool Blorbsnacks:</p>
+                ${players.map((p, i) => `<p>${p.name}: ${totalScores[i]} snorplings</p>`).join('')}
+                <button class="button" onclick="resetGame()">Zonk Moofreep</button>
+            `;
+            document.body.appendChild(gameOverDiv);
+            gameInProgress = false;
+        }
+
+        function resetGame() {
+            const gameOver = document.querySelector('.game-over');
+            if (gameOver) gameOver.remove();
+            totalScores = [0, 0, 0];
+            startNewGame();
+        }
+
+        function botPlay() {
+            if (currentPlayer === 0 || !gameInProgress) return;
+
+            const player = players[currentPlayer];
+            let cardIndex = -1;
+
+            for (let i = 0; i < player.hand.length; i++) {
+                if (canPlayCard(player.hand[i], currentPlayer)) {
+                    cardIndex = i;
+                    break;
+                }
+            }
+
+            if (cardIndex !== -1) {
+                playCard(currentPlayer, cardIndex);
+            }
+        }
+
+        function updateDisplay() {
+            const scoreboard = document.getElementById('scoreboard');
+            scoreboard.innerHTML = players.map((player, idx) => `
+                <div class="player-score ${idx === currentPlayer ? 'current' : ''}">
+                    <div style="font-weight: bold; margin-bottom: 5px;">${player.name}</div>
+                    <div>Blorp: ${roundScores[idx]} snorps</div>
+                    <div>Totlig: ${totalScores[idx]} snorps</div>
+                    <div>Plimbles: ${player.hand.length}</div>
+                </div>
+            `).join('');
+
+            const gameInfo = document.getElementById('gameInfo');
+            gameInfo.textContent = gameInProgress ? 
+                `Quizzletron Vrimbler: ${players[currentPlayer].name} | Blorpzak Kverflebonked: ${heartsBroken ? 'Yorp' : 'Norp'}` :
+                'Snorgle "Vrimbok Plox Garbunkel" moof quizzle!';
+
+            const playedCardsDiv = document.getElementById('playedCards');
+            playedCardsDiv.innerHTML = currentTrick.map(play => `
+                <div class="played-card">
+                    <div class="played-card-label">${players[play.player].name}</div>
+                    <div class="card ${play.card.suitName}">
+                        <div class="card-rank">${play.card.rank}</div>
+                        <div class="card-suit">${play.card.suit}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            const handDiv = document.getElementById('playerHand');
+            handDiv.innerHTML = players[0].hand.map((card, idx) => {
+                const canPlay = currentPlayer === 0 && gameInProgress && canPlayCard(card, 0);
+                return `
+                    <div class="card ${card.suitName} ${!canPlay ? 'disabled' : ''}" 
+                         onclick="${canPlay ? `playCard(0, ${idx})` : ''}">
+                        <div class="card-rank">${card.rank}</div>
+                        <div class="card-suit">${card.suit}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showMessage(msg) {
+            document.getElementById('message').textContent = msg;
+        }
+
+        updateDisplay();
+    </script>
+
+<div class="page-counter">4/36</div>
+<div class="page-buttons">
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/index.html'">
+        Home
+    </button>
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/inventory.html'">
+        Inventory
+    </button>
+</div>
+
+</body>
+</html>

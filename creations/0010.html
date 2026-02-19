@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mechanical Clock with Gears</title>
+<style>
+  body {
+    background: #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .clock-container {
+    width: 400px;
+    height: 400px;
+  }
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+  .gear {
+    transform-origin: center;
+  }
+  .hand {
+    stroke-linecap: round;
+    transform-origin: 200px 200px;
+  }
+  .hour-hand { stroke: #fff; stroke-width: 8; }
+  .minute-hand { stroke: #ddd; stroke-width: 6; }
+  .second-hand { stroke: red; stroke-width: 2; }
+</style>
+    <link rel="stylesheet" href="../styles/counter.css">
+</head>
+<body>
+
+<div class="clock-container">
+  <svg viewBox="0 0 400 400">
+    <g id="gear-main" class="gear">
+      <circle cx="200" cy="200" r="80" fill="#444" stroke="#666" stroke-width="8"/>
+      <g stroke="#888" stroke-width="4">
+        <line x1="200" y1="120" x2="200" y2="100"/>
+        <line x1="280" y1="200" x2="300" y2="200"/>
+        <line x1="200" y1="280" x2="200" y2="300"/>
+        <line x1="120" y1="200" x2="100" y2="200"/>
+      </g>
+    </g>
+
+    <g id="gear-small" class="gear">
+      <circle cx="300" cy="240" r="40" fill="#444" stroke="#666" stroke-width="6"/>
+      <g stroke="#888" stroke-width="3">
+        <line x1="300" y1="200" x2="300" y2="180"/>
+        <line x1="340" y1="240" x2="360" y2="240"/>
+        <line x1="300" y1="280" x2="300" y2="300"/>
+        <line x1="260" y1="240" x2="240" y2="240"/>
+      </g>
+    </g>
+
+    <line id="hourHand" class="hand hour-hand" x1="200" y1="200" x2="200" y2="130"/>
+    <line id="minuteHand" class="hand minute-hand" x1="200" y1="200" x2="200" y2="80"/>
+    <line id="secondHand" class="hand second-hand" x1="200" y1="200" x2="200" y2="60"/>
+  </svg>
+</div>
+
+<script>
+  const gearMain = document.getElementById('gear-main');
+  const gearSmall = document.getElementById('gear-small');
+  const hourHand = document.getElementById('hourHand');
+  const minuteHand = document.getElementById('minuteHand');
+  const secondHand = document.getElementById('secondHand');
+
+  function update() {
+    const now = new Date();
+    const s = now.getSeconds() + now.getMilliseconds() / 1000;
+    const m = now.getMinutes() + s / 60;
+    const h = now.getHours() % 12 + m / 60;
+
+    const secondAngle = s * 6;
+    const minuteAngle = m * 6;
+    const hourAngle = h * 30;
+
+    secondHand.style.transform = `rotate(${secondAngle}deg)`;
+    minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
+    hourHand.style.transform = `rotate(${hourAngle}deg)`;
+
+    gearMain.style.transform = `rotate(${secondAngle / 4}deg)`;
+    gearSmall.style.transform = `rotate(${-secondAngle / 2}deg)`;
+
+    requestAnimationFrame(update);
+  }
+
+  update();
+</script>
+
+<div class="page-counter">10/36</div>
+<div class="page-buttons">
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/index.html'">
+        Home
+    </button>
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/inventory.html'">
+        Inventory
+    </button>
+</div>
+
+</body>
+</html>

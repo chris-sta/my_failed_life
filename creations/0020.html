@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>maze</title>
+<style>
+  body { 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    background: #111; 
+    margin: 0; 
+    color: #fff; 
+    font-family: sans-serif;
+  }
+  canvas { 
+    background: #222; 
+    display: block; 
+    border: 2px solid #fff; 
+  }
+</style>
+    <link rel="stylesheet" href="../styles/counter.css">
+</head>
+<body>
+<canvas id="mazeCanvas" width="800" height="600"></canvas>
+<script>
+const canvas = document.getElementById('mazeCanvas');
+const ctx = canvas.getContext('2d');
+
+const tileSize = 25;
+const rows = 20;
+const cols = 30;
+
+let maze = [];
+
+function generateMaze() {
+  maze = Array.from({length: rows}, () => Array(cols).fill(1));
+  function carve(x, y) {
+    const dirs = [[0,-1],[1,0],[0,1],[-1,0]].sort(()=>Math.random()-0.5);
+    for (const [dx,dy] of dirs) {
+      const nx = x + dx*2;
+      const ny = y + dy*2;
+      if(ny>0 && ny<rows-1 && nx>0 && nx<cols-1 && maze[ny][nx]===1){
+        maze[y+dy][x+dx]=0;
+        maze[ny][nx]=0;
+        carve(nx,ny);
+      }
+    }
+  }
+  maze[1][1]=0;
+  carve(1,1);
+
+  let x = cols-2, y = rows-2;
+  while(maze[y][x]===1){ if(x>1)x--; maze[y][x]=0; }
+  while(y>1 && maze[y][x]===1){ y--; maze[y][x]=0; }
+}
+generateMaze();
+
+let player = { x: 1*tileSize, y: 1*tileSize, size: tileSize-10, speed: 2 };
+
+let keys = {};
+document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+function canMove(x, y) {
+  const corners = [
+    [x, y],
+    [x + player.size, y],
+    [x, y + player.size],
+    [x + player.size, y + player.size]
+  ];
+
+  for (const [cx, cy] of corners) {
+    const col = Math.floor(cx / tileSize);
+    const row = Math.floor(cy / tileSize);
+    if (!maze[row] || maze[row][col] === 1) {
+      if (!(col === cols-2 && row === rows-2)) return false;
+    }
+  }
+  return true;
+}
+
+function drawMaze() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(let y=0;y<rows;y++){
+    for(let x=0;x<cols;x++){
+      if(maze[y][x]===1) ctx.fillStyle='#888';
+      else ctx.fillStyle='#222';
+      ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize);
+      if(x===1 && y===1){ ctx.fillStyle='#0f0'; ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize);}
+      if(x===cols-2 && y===rows-2){ ctx.fillStyle='#f00'; ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize);}
+    }
+  }
+  ctx.fillStyle='#ff0';
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+}
+
+let hasWon = false;
+
+function update() {
+  let dx=0, dy=0;
+  if(keys['w']) dy=-player.speed;
+  if(keys['s']) dy=player.speed;
+  if(keys['a']) dx=-player.speed;
+  if(keys['d']) dx=player.speed;
+
+  if(canMove(player.x+dx, player.y)) player.x+=dx;
+  if(canMove(player.x, player.y+dy)) player.y+=dy;
+
+  drawMaze();
+
+  const exitX = (cols-2)*tileSize;
+  const exitY = (rows-2)*tileSize;
+  if(!hasWon &&
+     player.x + player.size/2 > exitX && player.x + player.size/2 < exitX+tileSize &&
+     player.y + player.size/2 > exitY && player.y + player.size/2 < exitY+tileSize){
+    hasWon = true;
+    setTimeout(()=>alert("🎉 You reached the exit!"),50);
+  }
+
+  requestAnimationFrame(update);
+}
+
+update();
+</script>
+
+<div class="page-counter">20/36</div>
+<div class="page-buttons">
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/index.html'">
+        Home
+    </button>
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/inventory.html'">
+        Inventory
+    </button>
+</div>
+
+</body>
+WASD to move
+</html>

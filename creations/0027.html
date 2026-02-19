@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>toenails</title>
+<style>
+  body { margin: 0; background: #1b1b1a; display: flex; justify-content: center; align-items: center; height: 100vh; }
+  canvas { background: #1b1b1a; }
+</style>
+    <link rel="stylesheet" href="../styles/counter.css">
+</head>
+<body>
+<canvas id="footCanvas" width="600" height="400"></canvas>
+<script>
+const canvas = document.getElementById('footCanvas');
+const ctx = canvas.getContext('2d');
+
+const toes = [
+    {x: 200, y: 150, radius: 25, nail: 10},
+    {x: 250, y: 140, radius: 28, nail: 12},
+    {x: 300, y: 135, radius: 26, nail: 10},
+    {x: 350, y: 145, radius: 24, nail: 8},
+    {x: 390, y: 160, radius: 22, nail: 7}
+];
+
+function drawFoot() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle = '#86867f';
+    ctx.beginPath();
+    ctx.moveTo(180,200);
+    ctx.bezierCurveTo(180,150,420,150,420,200);
+    ctx.lineTo(420,250);
+    ctx.bezierCurveTo(420,280,180,280,180,250);
+    ctx.closePath();
+    ctx.fill();
+
+    toes.forEach(toe=>{
+        ctx.fillStyle = '#86867f';
+        ctx.beginPath();
+        ctx.arc(toe.x, toe.y, toe.radius, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.fillStyle = '#fff1c1';
+        ctx.beginPath();
+        ctx.ellipse(toe.x, toe.y - toe.radius*0.4, toe.nail, toe.nail*0.5, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        toe.nail += 0.02;
+        if(toe.nail > toe.radius*0.9) toe.nail = toe.radius*0.5;
+    });
+}
+
+function animate() {
+    drawFoot();
+    requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+<div class="page-counter">27/36</div>
+<div class="page-buttons">
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/index.html'">
+        Home
+    </button>
+    <button onclick="location.href='https://chris-sta.github.io/my_failed_life/inventory.html'">
+        Inventory
+    </button>
+</div>
+
+</body>
+</html>
